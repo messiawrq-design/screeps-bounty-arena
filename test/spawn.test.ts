@@ -227,3 +227,25 @@ describe('spawn planning', () => {
     expect(calls[0]).toEqual([[WORK, CARRY, MOVE], 'Builder789', { memory: { role: 'builder' } }]);
   });
 });
+
+
+  it('catches spawn-priority starvation under constrained energy', () => {
+    const calls: unknown[] = [];
+    globalThis.Game = {
+      time: 1000,
+      creeps: {},
+    } as typeof Game;
+    
+    // 0 harvesters, 1 upgrader. We need a harvester more than another upgrader.
+    const creeps = [
+      { memory: { role: 'upgrader' }, ticksToLive: 100 }
+    ] as Creep[];
+    
+    const spawn = makeSpawn(calls, 200, [], [defaultSource]);
+    
+    // We expect the first role to be spawned to be harvester, NOT another upgrader or builder
+    ensureBasicHarvesters(spawn, creeps);
+    expect(calls.length).toBe(1);
+    expect(calls[0][0]).toEqual([WORK, CARRY, MOVE]);
+    expect(calls[0][1]).toContain('Harvester');
+  });
